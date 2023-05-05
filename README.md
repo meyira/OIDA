@@ -1,4 +1,6 @@
-# Compilation
+# C Proof-of-Concept implementation for the paper *OPRFs from Isogenies: Designs and Analysis* by Lena Heimberger, Fredrik Meisingseth and Christian Rechberger. 
+
+## Compilation
 While `make` compiles all four variants below, we briefly give an overview of the produced binaries. 
  - To compile `opus.c`, please run `make opus`. 
  - To compile `prf.c` which was used  for Figure 4, run `make prf`, which will generate a file noopt.csv with the respective data. 
@@ -10,7 +12,7 @@ Note this was tested on several Linux machines using `gcc`. We link with  `-pthr
 In addition, we provide the file `leak_OPRF_key_csidh.py`, which estimates how
 many random iterations are necessary to recover the key for the NR-OT
 OPRF if CSI-FiSh is not used. 
-# Ressources
+## Ressources
 [CSIDH Reference implementation](https://yx7.cc/code/csidh/csidh-latest.tar.xz)
 
 
