@@ -1,4 +1,6 @@
-# C Proof-of-Concept implementation for the paper *OPRFs from Isogenies: Designs and Analysis* by Lena Heimberger, Fredrik Meisingseth and Christian Rechberger. 
+# OPRFs from Isogenies: Designs and Analysis
+
+Lena Heimberger, Fredrik Meisingseth and Christian Rechberger. 
 
 ## Compilation
 While `make` compiles all four variants below, we briefly give an overview of the produced binaries. 
