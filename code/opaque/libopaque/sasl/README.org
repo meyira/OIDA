@@ -1,0 +1,122 @@
+* OPAQUE SASL bindings
+
+This directory contains an OPAQUE SASL mech.
+
+It works with cyrus-sasl, possibly also with libgsasl. dovecot-sasl is
+rumored to not be supported, due to dovecot allegedly implementing
+only 1 roundtrip - but this needs to be confirmed.
+
+** SASL HTTP Authentication
+
+This OPAQUE SASL mech has been tested against Apache2 using this
+https://gitlab.com/arpa2/apachemod/-/tree/master/arpa2_sasl module and
+this python script as a client
+https://github.com/stef/libopaque/blob/master/sasl/http_sasl.py
+
+To make this work with apache, you need to add this to your /etc/apache2/httpd.conf
+
+#+BEGIN_EXAMPLE
+LoadModule arpa2_sasl_module  /usr/lib/apache2/mod_arpa2_sasl.so
+#+END_EXAMPLE
+
+And something like this to a directory stanza:
+
+#+BEGIN_EXAMPLE
+AuthType SASL
+AuthName "SASL http auth"
+Require valid-user
+SaslRealm localhost
+SaslMechanisms OPAQUE
+SaslDbPath /etc/sasldb2
+#+END_EXAMPLE
+
+The file /etc/sasldb2 can be populated with entries like this:
+
+#+BEGIN_EXAMPLE
+sudo saslpasswd2 -n -f /etc/sasldb2 -a http -c -u localhost $username
+#+END_EXAMPLE
+
+You should make sure that the apache daemon can read the file /etc/sasldb2
+
+Additionally there is experimental support for SASL in NGINX:
+https://github.com/stef/ngx_http_auth_sasl_module
+
+There is also two firefox addons, which might or might not work:
+
+ - a more recent backend in c++: https://gitlab.com/arpa2/http_sasl_client/
+ - an older version with the backend written in java: https://github.com/arpa2/http-sasl-plugin
+
+Both plugins are actually identical, and only the backend is
+different. I tried the plugin with my [[https://github.com/stef/libopaque/blob/master/sasl/websasl.py][own backend]] hacked in python,
+and it worked against the apache server requiring HTTP auth using SASL
+and OPAQUE as a mech.
+
+There is also a [[https://github.com/stef/libopaque/blob/master/sasl/mitmsasl.py][SASL plugin]] for [[https://mitmproxy.org/][mitmproxy]] which you can start using:
+
+#+BEGIN_EXAMPLE
+mitmdump -q -s ./mitmsasl.py
+#+END_EXAMPLE
+
+and then just configure any of your HTTP clients (curl,wget,chrome and
+derivates) to use this proxy to have HTTP SASL support, e.g.:
+
+#+BEGIN_EXAMPLE
+% curl -vvvx http://localhost:8080 http://localhost:8090/
+*   Trying 127.0.0.1:8080...
+* Connected to localhost (127.0.0.1) port 8080 (#0)
+> GET http://localhost:8090/ HTTP/1.1
+> Host: localhost:8090
+> User-Agent: curl/7.82.0
+> Accept: */*
+> Proxy-Connection: Keep-Alive
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Server: nginx/1.20.2
+< Date: Wed, 01 Jun 2022 16:32:07 GMT
+< Content-Type: text/html
+< Content-Length: 45
+< Last-Modified: Sat, 21 May 2022 20:03:00 GMT
+< Connection: keep-alive
+< WWW-Authenticate: SASL s2c="",s2s="000000000D904F33"
+< ETag: "62894574-2d"
+< X-SASL-SECURE: yes
+< X-REMOTE-USER: s@localhost
+< X-SASL-REALM: localhost
+< X-SASL-MECH: OPAQUE
+< Accept-Ranges: bytes
+<
+<html><body><h1>It works!</h1></body></html>
+* Connection #0 to host localhost left intact
+#+END_EXAMPLE
+
+Both the mitmproxy addon and the native backend depend on zenity, as
+well as the requests and the sasl python modules to be installed. Be
+aware that both these block while querying for your username and
+password.
+
+It should be noted, that with OPAQUE every HTTP request requires 2
+extra authentication requests to be made. It is not very practical for
+humans to type in a password for every request, alternatively the
+password could be cached, which is something no one would ever want.
+Thus I'm considering a new post-opaque mechanism for doing 0 auth
+roundtrips for requests over HTTP, the server and the client then both
+have a shared secret after the first successful OPAQUE run and a
+counter, and each request from the client contains a
+
+#+BEGIN_EXAMPLE
+Authorization: hmac(shared_secret,counter++)
+#+END_EXAMPLE
+
+header. This is basically HOTP authentication. This eliminates replay
+attacks, also there is no need for caching or reusing the
+password. And I think this is a nice mechanism for a lot of the other
+SASL mechanisms that are not 0rtt.
+
+** Future work
+
+No SSF has been implemented (although it would be easy, since
+libsodium is already a dependency of libopaque.) This means you want
+to wrap whatever you are running in TLS. However implementing an SSF
+would make a lot of sense, since then OPAQUE is really used in both of
+its benefits, authentication and establishment of a secure channel.

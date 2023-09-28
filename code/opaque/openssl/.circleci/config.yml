@@ -1,0 +1,164 @@
+version: 2.1
+
+parameters:
+  run_downstream_tests:
+    type: boolean
+    default: false
+
+# CircleCI doesn't handle large file sets properly for local builds
+# https://github.com/CircleCI-Public/circleci-cli/issues/281#issuecomment-472808051
+localCheckout: &localCheckout
+  run: |-
+    PROJECT_PATH=$(cd ${CIRCLE_WORKING_DIRECTORY}; pwd)
+    mkdir -p ${PROJECT_PATH}
+    cd /tmp/_circleci_local_build_repo
+    git ls-files -z | xargs -0 -s 2090860 tar -c | tar -x -C ${PROJECT_PATH}
+    cp -a /tmp/_circleci_local_build_repo/.git ${PROJECT_PATH}
+
+jobs:
+  ubuntu_focal:
+    description: A template for running OQS-OpenSSL tests on x64 Ubuntu Bionic Docker VMs
+    parameters:
+      LIBOQS_SHARED:
+        description: "Build liboqs as a shared library."
+        type: boolean
+        default: false
+      OPENSSL_SHARED:
+        description: "Build OpenSSL as a shared library."
+        type: boolean
+        default: false
+      TESTSET:
+        description: "OQS test set."
+        type: string
+        default: oqs-test/test_tls_basic.py oqs-test/test_dgst.py
+    docker:
+      - image: openquantumsafe/ci-ubuntu-focal-x86_64:latest
+# Re-enable iff docker enforces rate limitations without auth:
+#        auth:
+#          username: $DOCKER_LOGIN
+#          password: $DOCKER_PASSWORD
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - run:
+          name: Clone liboqs
+          command: ./oqs-scripts/clone_liboqs.sh
+      - run:
+          name: Build liboqs
+          command: <<# parameters.LIBOQS_SHARED >> env LIBOQS_LIBTYPE=shared <</ parameters.LIBOQS_SHARED >> ./oqs-scripts/build_liboqs.sh
+      - run:
+          name: Build OpenSSL
+          command: <<# parameters.OPENSSL_SHARED >> env OPENSSL_LIBTYPE=shared <</ parameters.OPENSSL_SHARED >> ./oqs-scripts/build_openssl.sh
+      - run:
+          name: Run OpenSSL tests
+          command: env LD_LIBRARY_PATH="$(pwd):$(pwd)/oqs/lib" make test
+      - run:
+          name: Run OQS tests
+          command: env LD_LIBRARY_PATH="$(pwd):$(pwd)/oqs/lib" python3 -m pytest --numprocesses=auto << parameters.TESTSET >>
+
+  macOS:
+    description: A template for running OQS-OpenSSL tests on macOS
+    macos:
+      xcode: "13.2.1"
+    parameters:
+      LIBOQS_SHARED:
+        description: "Build liboqs as a shared library."
+        type: boolean
+        default: false
+      OPENSSL_SHARED:
+        description: "Build OpenSSL as a shared library."
+        type: boolean
+        default: false
+      TESTSET:
+        description: "OQS test set."
+        type: string
+        default: oqs-test/test_tls_basic.py oqs-test/test_dgst.py
+    steps:
+      - checkout # change this from "checkout" to "*localCheckout" when running CircleCI locally
+      - run:
+          name: Install dependencies
+          command: env HOMEBREW_NO_AUTO_UPDATE=1 brew install cmake ninja && pip3 install pytest pytest-xdist psutil
+      - run:
+          name: Clone liboqs
+          command: ./oqs-scripts/clone_liboqs.sh
+      - run:
+          name: Build liboqs
+          command: <<# parameters.LIBOQS_SHARED >> env LIBOQS_LIBTYPE=shared <</ parameters.LIBOQS_SHARED >> ./oqs-scripts/build_liboqs.sh
+      - run:
+          name: Build OpenSSL
+          command: <<# parameters.OPENSSL_SHARED >> env OPENSSL_LIBTYPE=shared <</ parameters.OPENSSL_SHARED >> ./oqs-scripts/build_openssl.sh
+      # making liboqs shared lib available in a non-standard place due to https://github.com/openssl/openssl/issues/13413 to allow shared-lib make test to run 
+      - run:
+          name: Run OpenSSL tests
+          command: ln -sf oqs/lib/liboqs.0.dylib . && env DYLD_LIBRARY_PATH="$(pwd):$(pwd)/oqs/lib" make test
+      - run:
+          name: Run OQS tests
+          command: env DYLD_LIBRARY_PATH="$(pwd):$(pwd)/oqs/lib" python3 -m pytest --numprocesses=auto << parameters.TESTSET >>
+
+  trigger-downstream-ci:
+    docker:
+      - image: cimg/base:2020.01
+# Re-enable iff docker enforces rate limitations without auth:
+#        auth:
+#          username: $DOCKER_LOGIN
+#          password: $DOCKER_PASSWORD
+    steps:
+      - run:
+          name: Trigger oqs-demos CI
+          command: |
+            curl --silent \
+                 --write-out "\n%{response_code}\n" \
+                 --user ${BUILD_TRIGGER_TOKEN}: \
+                 --request POST \
+                 --header "Content-Type: application/json" \
+                 -d '{ "branch": "main", "parameters": { "new_openssl_commit": true } }' \
+                 https://circleci.com/api/v2/project/gh/open-quantum-safe/oqs-demos/pipeline | tee curl_out \
+            && grep -q "201" curl_out
+      # don't trigger for now as it's too expensive
+      #- run:
+      #    name: Trigger profiling CI
+      #    command: |
+      #      curl -u ${BUILD_TRIGGER_TOKEN}: \
+      #           -X POST \
+      #           --header "Content-Type: application/json" \
+      #           -d '{ "branch": "main", "parameters": { "new_openssl_commit": true } }' \
+      #           https://circleci.com/api/v2/project/gh/open-quantum-safe/profiling/pipeline
+
+workflows:
+  version: 2.1
+  build:
+    jobs:
+      - ubuntu_focal:
+          name: ubuntu-static_oqs-static_ossl
+          context: openquantumsafe
+      - macOS:
+          name: macOS-shared_oqs-shared_ossl
+          LIBOQS_SHARED: true
+          OPENSSL_SHARED: true
+          TESTSET: oqs-test/test_tls_basic.py oqs-test/test_speed.py oqs-test/test_dgst.py
+      - cond-testapproval:
+          requires:
+            - ubuntu-static_oqs-static_ossl
+          when:
+            equal: [ false , << pipeline.parameters.run_downstream_tests >> ]
+          type: approval
+      - macOS:
+          name: macOS-static_oqs-static_ossl
+          requires: 
+            - cond-testapproval
+          TESTSET: oqs-test/test_tls_basic.py oqs-test/test_cms.py oqs-test/test_dgst.py
+      - ubuntu_focal:
+          name: ubuntu-shared_oqs-shared_ossl
+          requires: 
+            - cond-testapproval
+          context: openquantumsafe
+          LIBOQS_SHARED: true
+          OPENSSL_SHARED: true
+          TESTSET: oqs-test/test_tls_full.py oqs-test/test_cms.py oqs-test/test_speed.py oqs-test/test_dgst.py
+  on-main-branch:
+    when:
+      or:
+        - equal: [ OQS-OpenSSL_1_1_1-stable , << pipeline.git.branch >> ]
+        - equal: [ true , << pipeline.parameters.run_downstream_tests >> ]
+    jobs:
+      - trigger-downstream-ci:
+          context: openquantumsafe

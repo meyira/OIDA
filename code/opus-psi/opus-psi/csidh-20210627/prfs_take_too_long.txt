@@ -1,0 +1,54 @@
+# stuff keys
+Done in 0.730400 seconds
+Used 3 csidh computations
+
+# ADDITIVE OPTIMIZATION
+
+no optimization, 20 runs
+Done in 154.595767 seconds
+avg. run: 7.72978835
+
+batched server result computation, 20 runs: 
+Done in 137.719963 seconds
+avg. run: 6.88599815
+
+batch g_i(inverted randomness) computation, 20 runs: 
+Done in 102.746188 seconds
+avg. run: 5.1373094
+  
+optimizing final computation (unblinding), 20 runs: 
+Done in 63.778972 seconds
+avg. run: 3.1889486 
+
+single optimized iterations: 
+2.976942 s
+2.946228 s
+2.902691 s
+2.977549 s
+2.942164 s
+3.073381 s
+3.030427 s
+3.079299 s
+3.040336 s
+3.080991 s
+3.055570 s
+3.110092 s
+2.948972 s
+3.121874 s
+2.838197 s
+2.859304 s
+2.966945 s
+2.928292 s
+2.819905 s
+2.938281 s
+
+
+
+avg: 2.981872
+median: 2.9719435
+
+
+# ADDITIVE VS LUT PRF computation
+100 prf Computations: 
+LUT        36.504772 seconds
+key addion 69.031817 seconds
