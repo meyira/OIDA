@@ -2,6 +2,16 @@
 
 Lena Heimberger, Tobias Hennerbichler, Fredrik Meisingseth, Sebastian Ramacher and Christian Rechberger. 
 
+*NOTE:* This is academic research code and not production-ready. The implementation is not constant-time and may have other errors. 
+
+## Content
+The _ code/ _ folder contains the following implementations: 
+- _mobile\_psi\_cpp_ optimizes the ECNR implementation from the droidCrypto PSI protocol
+- _nr\_ot_ implements the NR-OT stand-alone and with Private Set Intersection
+- _opaque_  contains a copy of the libopaque library using isogeny-based primitives
+- _opus_ implements OPUS stand-alone
+- _opus-psi_ implements OPUS with Private Set Intersection
+
 ## Compilation
 While `make` compiles all four variants below, we briefly give an overview of the produced binaries. 
  - To compile `opus.c`, please run `make opus`. 
@@ -16,5 +26,9 @@ many random iterations are necessary to recover the key for the NR-OT
 OPRF if CSI-FiSh is not used. 
 ## Ressources
 [CSIDH Reference implementation](https://yx7.cc/code/csidh/csidh-latest.tar.xz)
+[CSI-FiSh](https://github.com/KULeuven-COSIC/CSI-FiSh)
+[droidCrypto](https://github.com/contact-discovery/mobile_psi_cpp/)
+[libopaque](https://github.com/stef/libopaque)
+
 
 
