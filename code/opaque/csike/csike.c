@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "csike.h"
 
 void G(const uint8_t G_in[CSIDH_NUM_BYTES + CSIDH_PK_LEN], private_key *r) {
@@ -5,10 +6,16 @@ void G(const uint8_t G_in[CSIDH_NUM_BYTES + CSIDH_PK_LEN], private_key *r) {
   unsigned char name[] = "";
   unsigned char cstm_g[] = "G";
   size_t count = 0;
+  uint8_t in[CSIDH_NUM_BYTES + CSIDH_PK_LEN + sizeof(uint8_t)];
+  memcpy(in, G_in, CSIDH_NUM_BYTES + CSIDH_PK_LEN);
+  // Use an additional counter to prevent cSHAKE from producing the same output every iteration
+  in[CSIDH_NUM_BYTES + CSIDH_PK_LEN] = 0;
 
   while(1) {
-    cSHAKE256(G_in, (CSIDH_NUM_BYTES + CSIDH_PK_LEN) * 8, G_out, sizeof(G_out) * 8, name, sizeof(name) * 8,
+    assert(in[CSIDH_NUM_BYTES + CSIDH_PK_LEN] != 255);
+    cSHAKE256(in, (CSIDH_NUM_BYTES + CSIDH_PK_LEN + sizeof(uint8_t)) * 8, G_out, sizeof(G_out) * 8, name, sizeof(name) * 8,
       cstm_g, sizeof(cstm_g) * 8);
+    in[CSIDH_NUM_BYTES + CSIDH_PK_LEN]++;
       
     for(size_t i = 0; i < (2 * CSIDH_NUM_BYTES); i++) {
       int8_t val = (G_out[i / 2] >> (i % 2) * 4) & 0xF;

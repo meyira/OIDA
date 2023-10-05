@@ -2,6 +2,7 @@
 #define CSIKE_H
 
 #include "string.h"
+
 #include "csidh.h"
 #include "rng.h"
 #include "libkeccak.a.headers/SP800-185.h"
