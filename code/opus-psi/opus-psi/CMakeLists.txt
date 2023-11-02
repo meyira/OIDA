@@ -20,7 +20,7 @@ add_library(opus-psi SHARED ${SRCS})
 # normal x86 build
 set(CMAKE_C_FLAGS "-ffunction-sections -Wall -msse2 \
 -msse4.1 -mpclmul -flto -no-pie -Wno-ignored-attributes \
--fPIC -fsanitize=address")
+-fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++20 -maes -mrdseed ")
 
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
