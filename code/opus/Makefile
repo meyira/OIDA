@@ -3,6 +3,9 @@
 
 BITS?=512
 
+OUT_DIR=bin
+$(shell mkdir -p $(OUT_DIR))
+
 ifndef UINT_IMPL
 	UINT_IMPL=uint.c
 	ifneq ("$(wildcard p${BITS}/uint.s)", "")
@@ -46,7 +49,7 @@ server: ${includes} ${sources} files/simple-server.c
 		-pthread\
 		$(sources) \
 		files/simple-server.c \
-		-o files/simple-server
+		-o ${OUT_DIR}/simple-server
 
 client: ${includes} ${sources} files/simple-client.c
 	@cc \
@@ -62,7 +65,7 @@ client: ${includes} ${sources} files/simple-client.c
 		-pthread -lrt \
 		$(sources) \
 		files/simple-client.c \
-		-o files/simple-client
+		-o ${OUT_DIR}/simple-client
 
 prf: ${includes} ${sources} prf.c
 	@cc \
@@ -76,7 +79,7 @@ prf: ${includes} ${sources} prf.c
 		-DNDEBUG \
 		$(sources) \
 		prf.c \
-		-o prf
+		-o ${OUT_DIR}/prf
 
 oprf: ${includes} ${sources} opus.c
 	@cc \
@@ -91,7 +94,7 @@ oprf: ${includes} ${sources} opus.c
 		-DNDEBUG \
 		$(sources) \
 		opus.c \
-		-o opus
+		-o ${OUT_DIR}/opus
 update-prf: ${includes} ${sources} update-prf.c
 	@cc \
 		$(if ${BENCH_ITS},-DBENCH_ITS=${BENCH_ITS}) \
@@ -104,7 +107,7 @@ update-prf: ${includes} ${sources} update-prf.c
 		-DNDEBUG \
 		$(sources) \
 		update-prf.c \
-		-o oprf-opt
+		-o ${OUT_DIR}/oprf-opt
 clean:
-	@rm -f prf opus update-prf files/simple-server files/simple-client
+	@rm -f ${OUT_DIR}/*
 
