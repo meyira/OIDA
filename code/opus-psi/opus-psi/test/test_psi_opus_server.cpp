@@ -137,9 +137,6 @@ typedef struct BlindingMaterial{
 };
 
 void evaluate(size_t num_client_elements_){
-  // TODO smaller
-  // private_key **rs=(private_key**)calloc(num_client_elements_, sizeof(private_key*));
-
   std::map<uint32_t, BlindingMaterial> rs;
   size_t finished=num_client_elements_*(hashlen+1);
   while(finished>=0){ 
@@ -158,8 +155,7 @@ void evaluate(size_t num_client_elements_){
           add_large_key(&B.unblinder, private_keys[0]);
           for(size_t i=0;i<hashlen; ++i){
             private_key k={0};
-            // TODO THIS FAILS!!!!
-             csidh_private(&k);
+            csidh_private(&k);
             //std::unique_lock<std::mutex> ls(m);
             sub_large_key(&B.unblinder, k);
             B.ri.push_back(k);
@@ -170,6 +166,7 @@ void evaluate(size_t num_client_elements_){
           // full.wait(lkm, []{return !client_req.empty();});
           auto success=rs.insert(std::make_pair(req.id,B));
           lkm.unlock();
+          puts("Inserted");
           if(!success.second){
             printf("Generating key material for %d at %d not possible: Insertion error.\n", req.id, req.seq);
             continue;
