@@ -24,6 +24,7 @@ CSocketChannel *ChanSend;
 CSocketChannel *ChanRecv;
 std::atomic<bool> DONE=ATOMIC_VAR_INIT(false);
 
+
 void setup(){
   // very similar to droidcrypto
   std::chrono::high_resolution_clock::time_point time_start, time_end;
@@ -61,6 +62,7 @@ void setup(){
   cf_->SetTwoIndependentMultiplyShiftParams(params);
   auto time3 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> trans = time3 - time_start;
+  //Log::v("CF", "%s", cf_->Info().c_str());
 
   Log::v("Setup", "Time: %fs \n\t Sent %d bytes", trans.count(),
       ChanRecv->getBytesSent());
@@ -93,6 +95,7 @@ void receive(size_t remaining){
       almost_empty.notify_one();
     }
   }
+  puts("BEE");
 }
 
 void initialize(size_t elms){
@@ -103,7 +106,7 @@ void initialize(size_t elms){
 
   size_t current=0; 
   while(current < elms){
-    // queue is not that full, add more elements 
+    // queue is not that full, add more elements TODO this could be a seperate
     // thread that just dies after all are filled
     public_key curve={0};
     pk_req r_E;
@@ -128,7 +131,7 @@ void initialize(size_t elms){
 
 void evaluate(std::vector<block> elements){
   size_t done=elements.size(); 
-  // size_t done=1; 
+ // size_t done=1; 
   // start by sending all initial elements, not ideal
   while(DONE!=true){
     std::unique_lock<std::mutex> lm(m);
@@ -170,7 +173,7 @@ void evaluate(std::vector<block> elements){
         std::chrono::duration<double> recv = time6 - time4;
         std::string time = "Time:\n\t  " + std::to_string(recv.count()) + "s";
         Log::v("PSI", "%s", time.c_str());
-        Log::v("Online", "Recv: %d", ChanRecv->getBytesSent());
+        Log::v("Online", "Sent: %d", ChanRecv->getBytesSent());
         Log::v("Online", "Sent: %d", ChanSend->getBytesSent());
         exit(0);
       }

@@ -3,6 +3,7 @@ set(CMAKE_SOURCE_DIR ..)
 
 add_subdirectory(GSL)
 add_subdirectory(csidh-20210627)
+#add_subdirectory(CSI-FiSh)
 add_subdirectory(cuckoofilter)
 
 set(SRCS
@@ -20,7 +21,7 @@ add_library(opus-psi SHARED ${SRCS})
 # normal x86 build
 set(CMAKE_C_FLAGS "-ffunction-sections -Wall -msse2 \
 -msse4.1 -mpclmul -flto -no-pie -Wno-ignored-attributes \
--fPIC -O3")
+-fPIC ")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++20 -maes -mrdseed ")
 
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")

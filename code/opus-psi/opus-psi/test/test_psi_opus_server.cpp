@@ -166,7 +166,6 @@ void evaluate(size_t num_client_elements_){
           // full.wait(lkm, []{return !client_req.empty();});
           auto success=rs.insert(std::make_pair(req.id,B));
           lkm.unlock();
-          puts("Inserted");
           if(!success.second){
             printf("Generating key material for %d at %d not possible: Insertion error.\n", req.id, req.seq);
             continue;
