@@ -2,7 +2,6 @@
 set(TEST_SRCS
   test_psi_opus_client.cpp
   test_psi_opus_server.cpp
-  random.cpp
   )
 
 foreach (filename ${TEST_SRCS})

@@ -160,7 +160,9 @@ void evaluate(std::vector<block> elements){
     else if(res.seq==hashlen){
       large_csidh(&curve, &res.E0, &blinder[res.id]);
       if (cf_->Contain(curve.A.c) == cuckoofilter::Ok) {
+#ifdef DEBUG
         Log::v("PSI", "Intersection C%d", res.id);
+#endif
       }
       --done;
       if(done==0){
