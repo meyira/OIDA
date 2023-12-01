@@ -1,5 +1,4 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 macro (add_test _name)
   add_compile_options("-Wall;-march=native;-O3;-funroll-loops;-maes;-mrdseed;-std=c++17;-fno-omit-frame-pointer")
