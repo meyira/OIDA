@@ -22,7 +22,7 @@ extern "C"{
 
 using namespace emp;
 const size_t N=128; 
-const size_t ITERATIONS=10; 
+const size_t ITERATIONS=100; 
 bool input[N];
 
 // for offline computation / KAT verification

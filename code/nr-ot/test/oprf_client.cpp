@@ -16,7 +16,7 @@ extern "C"{
 
 using namespace emp;
 
-const size_t ITERATIONS=10; 
+const size_t ITERATIONS=100; 
 
 int main(int argc, char *argv[])
 {
