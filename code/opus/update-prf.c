@@ -111,14 +111,14 @@ int main()
         //}
         //else
         //  printf("\x1b[32mequal.\x1b[0m\n");
-    }
     FILE *noopt = fopen("updateable.csv", "a");
     if(noopt==NULL) {
       perror("Error opening updatable file.");
       return -1;
     }
-    fprintf(noopt, "%ld;%f;%f\n", update, recompute_t/runs, update_t/runs);
+    fprintf(noopt, "%ld;%f;%f\n", update, recompute_t, update_t);
     fclose(noopt);
+    }
 
   }
   return 0; 
