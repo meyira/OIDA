@@ -16,6 +16,8 @@
 #include <opus-psi/csidh-20210627/utils.h>
 #include <random>
 
+// #define DEBUG
+
 const size_t hashlen=128;
 const size_t keylen=129;
 size_t num_server_elements;
@@ -45,7 +47,9 @@ std::vector<public_key> prf(std::vector<block> elements){
     }
     large_csidh(&prfOut[i], &base, &aggregated);
   }
+#ifdef DEBUG
   Log::v("PSI", "PRF done");
+#endif
   return prfOut;
 }
 
@@ -71,8 +75,10 @@ void setup(std::vector<block> elements){
     (void)success;
     assert(success == cuckoofilter::Ok);
   }
+#ifdef DEBUG
   Log::v("PSI", "Built CF");
   Log::v("CF", "%s", cf.Info().c_str());
+#endif
   num_server_elements = htobe64(num_server_elements);
   ChanSend->send((uint8_t *)&num_server_elements, sizeof(num_server_elements));
 
@@ -102,10 +108,9 @@ void setup(std::vector<block> elements){
 
   auto time4 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> trans_time = time4 - time0;
-  Log::v("PSI",
-      "Setup Time:\n\t%fs"
-      "Trans,\n\t Setup Comm: %fMiB sent\n",
-      trans_time.count(), ChanSend->getBytesSent() / 1024.0 / 1024.0);
+
+  Log::v("Setup", "Time: %f s", trans_time.count());
+  Log::v("Setup", "Sent: %f kiB sent", ChanSend->getBytesSent() / 1024.0);
 }
 
 void receive(size_t all){
@@ -220,11 +225,9 @@ void online(){
   // done
   auto time4 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> trans_time = time4 - time3;
-  Log::v("PSI",
-      "Online Time:\n\t%fsec\n"
-      "Online Comm: %fMiB recv\n",
-      "Online Comm: %fMiB sent\n",
-      trans_time.count(), ChanSend->getBytesSent() / 1024.0 / 1024.0,ChanRecv->getBytesSent() / 1024.0 / 1024.0);
+  Log::v("Online", "Time: %f s", trans_time.count());
+  Log::v("Online", "Sent: %f kiB", (float)(ChanSend->getBytesSent())/1024.0);
+  Log::v("Online", "Recv: %f kiB", (float)(ChanRecv->getBytesRecv())/1024.0);
 }
 
 

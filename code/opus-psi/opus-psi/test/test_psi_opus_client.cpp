@@ -63,8 +63,7 @@ void setup(){
   auto time3 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> trans = time3 - time_start;
 
-  Log::v("Setup", "Time: %f s \n\t Sent %d bytes", trans.count(),
-      ChanRecv->getBytesSent());
+  Log::v("Setup", "Time: %f s", trans.count());
 }
 
 std::deque<pk_res> client_res;
