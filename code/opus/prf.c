@@ -38,17 +38,11 @@ bool prf(bool msg[], private_key *server_keys, size_t length){
 
 int main(void){
   bool msg[512]; 
-  int runs=0; 
   double prf_time=0;
   double opt_time=0;
   clock_t startTime, endTime;
   remove("prf_opus.csv");
   for(size_t k=0; k<512; k++){
-          FILE *noopt = fopen("prf_opus.csv", "a");
-          if(noopt==NULL) {
-                  perror("Error opening noopt file.");
-                  return -1; 
-          }
           private_key *server_keys=(private_key*)calloc(sizeof(private_key), k+1);
           for(size_t runs=0; runs<100; ++runs){
                   for(size_t i=0; i<(k); i++){
@@ -67,12 +61,17 @@ int main(void){
                   prf_opt(msg, server_keys, k); 
                   endTime = clock();
                   opt_time += (double)(endTime - startTime)/CLOCKS_PER_SEC;
+                  FILE *out = fopen("prf_opus.csv", "a");
+                  if(out==NULL) {
+                    perror("Error opening out file.");
+                    return -1; 
+                  }
+                  fprintf(out, "%ld %f %f\n", k, prf_time, opt_time);
+                  fclose(out);
           }
-          fprintf(noopt, "%ld;%f;%f\n", k, prf_time/100, opt_time/100);
           free(server_keys); 
           server_keys=NULL;
           //fclose(opt);
-          fclose(noopt);
           printf("finished %ld\n", k); 
   }
   return 0; 

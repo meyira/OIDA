@@ -109,16 +109,33 @@ void opus(private_key *keys, bool* msg, size_t h){
 /* defaults */
 int main()
 {
-  float runs=100;
   remove("benchmarks.txt");
+  FILE *bench = fopen("benchmarks.txt", "a");
+  if(bench==NULL) {
+    perror("Error opening file.");
+    exit(1);
+  }
+  else{
+    fprintf(bench, "Keygen(ms) PRF-Eval(ms) Opus-Client(ms) Opus-Server(ms) OPUS-all(ms)");
+    fclose(bench);
+  }
   for(size_t h=0; h<3; ++h){
+    bench = fopen("benchmarks.txt", "a");
+    if(bench==NULL) {
+      perror("Error opening file.");
+      exit(1);
+    }
+    else{
+      fprintf(bench, "---------------------------------------- %ld bits ----------------------------------------\n",HASHLEN[h]);
+      fclose(bench);
+    }
     bool msg[HASHLEN[h]];
     private_key server_keys[HASHLEN[h]+1];
-    keygen_t=0;
-    prf_t=0;
-    oprf_t=0;
-    s_oprf_t=0;
-    for(size_t s=0; s<runs; ++s){
+    for(size_t s=0; s<100; ++s){
+      keygen_t=0;
+      prf_t=0;
+      oprf_t=0;
+      s_oprf_t=0;
       time_t t0 = (float)clock();
       for(size_t i=0; i<(HASHLEN[h]+1); i++){
         csidh_private(&server_keys[i]);
@@ -129,27 +146,15 @@ int main()
         msg[i]=rand()%2;
       prf(server_keys, msg, HASHLEN[h]); 
       opus(server_keys, msg, HASHLEN[h]); 
+      FILE *bench = fopen("benchmarks.txt", "a");
+      if(bench==NULL) {
+        perror("Error opening file.");
+      }
+      else{
+        fprintf(bench, "%f %f %f %f %f\n", ((float)keygen_t)/(CLOCKS_PER_SEC/1000),((float)prf_t)/(CLOCKS_PER_SEC/1000), ((float)(oprf_t-s_oprf_t))/(CLOCKS_PER_SEC/1000), ((float)s_oprf_t)/(CLOCKS_PER_SEC/1000), ((float)oprf_t)/(CLOCKS_PER_SEC/1000)); 
+        fclose(bench);
+      }
     }
-    FILE *bench = fopen("benchmarks.txt", "a");
-    printf( "---------------------------------------- %ld bits ----------------------------------------\n",HASHLEN[h]);
-    printf("Keygen took %f cycles = %f ms\n", keygen_t/runs, (keygen_t/runs)/(CLOCKS_PER_SEC/1000)); 
-    printf("PRF Evaluation took %f cycles = %f ms\n", prf_t/runs, (prf_t/runs)/(CLOCKS_PER_SEC/1000)); 
-    printf("OPUS client took %f cycles = %f ms\n", (oprf_t-s_oprf_t)/runs, ((oprf_t-s_oprf_t)/runs)/(CLOCKS_PER_SEC/1000)); 
-    printf("OPUS server took %f cycles = %f ms\n", s_oprf_t/runs, (s_oprf_t/runs)/(CLOCKS_PER_SEC/1000)); 
-    printf("OPUS took %f cycles = %f ms\n", oprf_t/runs, (oprf_t/runs)/(CLOCKS_PER_SEC/1000)); 
-
-    if(bench==NULL) {
-      perror("Error opening file.");
-    }
-    else{
-      fprintf(bench, "---------------------------------------- %ld bits ----------------------------------------\n",HASHLEN[h]);
-      fprintf(bench, "Keygen took %f cycles = %f ms\n", keygen_t/runs, (keygen_t/runs)/(CLOCKS_PER_SEC/1000)); 
-      fprintf(bench, "PRF Evaluation took %f cycles = %f ms\n", prf_t/runs, (prf_t/runs)/(CLOCKS_PER_SEC/1000)); 
-      fprintf(bench, "OPUS client took %f cycles = %f ms\n", (oprf_t-s_oprf_t)/runs, ((oprf_t-s_oprf_t)/runs)/(CLOCKS_PER_SEC/1000)); 
-      fprintf(bench, "OPUS server took %f cycles = %f ms\n", s_oprf_t/runs, (s_oprf_t/runs)/(CLOCKS_PER_SEC/1000)); 
-      fprintf(bench, "OPUS took %f cycles = %f ms\n", oprf_t/runs, (oprf_t/runs)/(CLOCKS_PER_SEC/1000)); 
-    }
-    fclose(bench);
   }
   return 0; 
 }
