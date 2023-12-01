@@ -77,13 +77,13 @@ int main(int argc, char *argv[])
     bool input[N];
     mpz_t m_0[N];
 
-    /*
-     * fill OPRF with some value
-     * to test correctness, server and client need the same one (e.g. true for
-     * all)
-     */
     for(size_t i=0; i<N; ++i){
+#ifdef DEBUG
+      // test with known input
       input[i]=(i%2);
+#elif 
+      input[i]=(rand()%2);
+#endif
       mpz_init(m_0[i]);
     }
 

@@ -39,8 +39,13 @@ void kat(){
   action(&pk,&base, &priv_key[0]);
 #endif
   for(size_t i=0; i<N; ++i){
-    // simulate random input
+#ifdef DEBUG
+    // same input as client
     if(i%2){
+#elif
+    // random input
+    if((rand%2)){
+#endif
 #ifdef OPT_PRF
       mpz_add(t,t,mpz_keys[i+1]);
 #elif
@@ -78,12 +83,12 @@ void init(){
     mpz_init(mpz_keys[i]); 
   }
 #ifdef BENCH_KEYGEN
-    FILE *f = fopen("keygen.csv", "a");
-    if(f==NULL) {
-      perror("Error opening file.");
-      exit(1);
-    }
-    fprintf(f, "seconds \n");
+  FILE *f = fopen("keygen.csv", "a");
+  if(f==NULL) {
+    perror("Error opening file.");
+    exit(1);
+  }
+  fprintf(f, "seconds \n");
 
   for(size_t k=0; k<ITERATIONS; ++k){
     auto time0 = std::chrono::high_resolution_clock::now();

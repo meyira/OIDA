@@ -18,6 +18,3 @@ To execute, run e.g.
 `test/oprf_server 12345`
 `test/oprf_client 127.0.0.1 12345`
 
-The binaries will both compute on a known input to ensure correctness. 
-Note: The OPRF computation sometimes does not give the same result as the PRF
-computation. This is due to the Babai reduction. 
