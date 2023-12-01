@@ -106,8 +106,7 @@ void initialize(size_t elms){
 
   size_t current=0; 
   while(current < elms){
-    // queue is not that full, add more elements TODO this could be a seperate
-    // thread that just dies after all are filled
+    // queue is not that full, add more elements  
     public_key curve={0};
     pk_req r_E;
     r_E.id=current; 
@@ -174,7 +173,6 @@ void evaluate(std::vector<block> elements){
         std::string time = "Time:\n\t  " + std::to_string(recv.count()) + "s";
         Log::v("PSI", "%s", time.c_str());
         Log::v("Online", "Sent: %d", ChanRecv->getBytesSent());
-        Log::v("Online", "Sent: %d", ChanSend->getBytesSent());
         exit(0);
       }
     }
@@ -218,11 +216,11 @@ int main(int argc, char** argv) {
 
   SecureRandom rnd;
   std::vector<block> elements; 
-  elements.push_back(toBlock((const uint8_t*)"ffffffff88888888"));
   // get one good result to test intersection
   for(size_t i = 1; i < num_inputs; i++) {
     elements.push_back(rnd.randBlock());
   }
+  elements.push_back(toBlock((const uint8_t*)"ffffffff88888888"));
   ChanRecv=new CSocketChannel (argv[1], port, false);
   ChanSend=new CSocketChannel (argv[1], port+1, false);
 

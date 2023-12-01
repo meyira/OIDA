@@ -111,10 +111,9 @@ void setup(std::vector<block> elements){
 void receive(size_t all){
   size_t remaining=all*(hashlen+1);
   size_t highest=0;
-  while(remaining>=0){
+  while(remaining>0){
     pk_req req; 
     ChanRecv->recv((uint8_t*)&req, sizeof(pk_req));
-    // TODO magic sorting here, maybe with some fuzzing
     if(highest < req.seq){
       highest=req.seq-2;
       std::unique_lock<std::mutex> lk(m);
@@ -129,6 +128,7 @@ void receive(size_t all){
     full.notify_one();
     remaining--;
   }
+  return;
 }
 
 typedef struct BlindingMaterial{
@@ -138,8 +138,8 @@ typedef struct BlindingMaterial{
 
 void evaluate(size_t num_client_elements_){
   std::map<uint32_t, BlindingMaterial> rs;
-  size_t finished=num_client_elements_*(hashlen+1);
-  while(finished>=0){ 
+  size_t finished=num_client_elements_;
+  while(finished>0){ 
     if(!(client_req.empty())){
       std::unique_lock<std::mutex> lk(m);
       full.wait(lk, []{return !client_req.empty();});
@@ -156,14 +156,10 @@ void evaluate(size_t num_client_elements_){
           for(size_t i=0;i<hashlen; ++i){
             private_key k={0};
             csidh_private(&k);
-            //std::unique_lock<std::mutex> ls(m);
             sub_large_key(&B.unblinder, k);
             B.ri.push_back(k);
-            //ls.unlock();
           }
-          // lock rs
           std::unique_lock<std::mutex> lkm(m);
-          // full.wait(lkm, []{return !client_req.empty();});
           auto success=rs.insert(std::make_pair(req.id,B));
           lkm.unlock();
           if(!success.second){
@@ -204,9 +200,8 @@ void evaluate(size_t num_client_elements_){
         rs.erase(req.id);
       }
     }
-
   }
-
+  return;
 }
 
 void online(){
@@ -230,8 +225,6 @@ void online(){
       "Online Comm: %fMiB recv\n",
       "Online Comm: %fMiB sent\n",
       trans_time.count(), ChanSend->getBytesSent() / 1024.0 / 1024.0,ChanRecv->getBytesSent() / 1024.0 / 1024.0);
-
-
 }
 
 
