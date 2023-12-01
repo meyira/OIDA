@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 #ifdef DEBUG
       // test with known input
       input[i]=(i%2);
-#elif 
+#else 
       input[i]=(rand()%2);
 #endif
       mpz_init(m_0[i]);

@@ -166,7 +166,7 @@ void evaluate(std::vector<block> elements){
       if(done==0){
         auto time6 = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> recv = time6 - time4;
-        Log::v("Online", "Time: %fs s", recv.count());
+        Log::v("Online", "Time: %f s", recv.count());
         Log::v("Online", "Sent: %f kiB", (float)(ChanSend->getBytesSent())/1024.0);
         Log::v("Online", "Recv: %f kiB", (float)(ChanRecv->getBytesRecv())/1024.0);
         exit(0);
