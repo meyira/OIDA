@@ -35,20 +35,20 @@ void kat(){
   mpz_init(t);
 #ifdef OPT_PRF
   mpz_add(t,t,mpz_keys[0]);
-#elif
+#else
   action(&pk,&base, &priv_key[0]);
 #endif
   for(size_t i=0; i<N; ++i){
 #ifdef DEBUG
     // same input as client
     if(i%2){
-#elif
+#else
     // random input
-    if((rand%2)){
+    if((rand()%2)){
 #endif
 #ifdef OPT_PRF
       mpz_add(t,t,mpz_keys[i+1]);
-#elif
+#else
       action(&pk,&pk, &priv_key[i+1]);
 #endif
     }

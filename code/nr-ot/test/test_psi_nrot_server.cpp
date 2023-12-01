@@ -55,16 +55,21 @@ void prf(block element, public_key *pk){
 }
 
 void online(NetIO *io){
+#ifdef DEBUG
   auto begin = io->send_counter;
   auto time2 = std::chrono::high_resolution_clock::now();
+#endif
   PQOT ot(io, 1, 1, 17);
   io->sync();
   ot.keygen();
+#ifdef DEBUG
   auto time3 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> recv = time3- time2;
   auto end = io->send_counter-begin;
   printf("CSI-FiSh-OPRF-Server: keygen Time: %f s\n\t Keygen Comm. : %f kiB\n ", recv.count(), (end /1024.0));
-  begin = io->send_counter;
+#endif
+  auto begin_o = io->send_counter;
+  auto begin_r = io->recv_counter;
 
   size_t num_client_elements, num_elements;
   io->recv_data((uint8_t *)&num_client_elements, sizeof(num_client_elements));
@@ -123,10 +128,12 @@ void online(NetIO *io){
   }
 
   auto time5 = std::chrono::high_resolution_clock::now();
-  recv = time5- time4;
-  end = io->send_counter;
-  end= end- begin;
-  printf("CSI-FiSh-OPRF-Server:  OPRF Time: %f s\n\t  comm. : %f kiB\n ", recv.count(), (end /  1024.0));
+  std::chrono::duration<double> recv_t = time5- time4;
+
+  printf("[Online] Time: %f s\n", recv_t.count());
+  printf("[Online] Sent: %f kiB\n", (float)(io->send_counter-begin_o)/1024.0);
+  printf("[Online] Recv: %f kiB\n", (float)(io->recv_counter-begin_r)/1024.0);
+
 
   delete io;
 }
@@ -156,7 +163,9 @@ void setup(NetIO *io,std::vector<block> &elements){
   }
   elements.clear();
 
+#ifdef DEBUG
   puts("build filter");
+#endif
 
   typedef cuckoofilter::CuckooFilter<
     uint64_t *, 32, cuckoofilter::SingleTable,
@@ -164,16 +173,17 @@ void setup(NetIO *io,std::vector<block> &elements){
                CuckooFilter;
   CuckooFilter cf(num_elements);
 
-  //auto time1 = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < num_elements; i++) {
     auto success = cf.Add(prf_out[i].A.c);
     (void)success;
     assert(success == cuckoofilter::Ok);
   }
+#ifdef DEBUG
   printf("PSI: Built CF");
   printf("CF: %s", cf.Info().c_str());
+#endif
   auto num_server_elements = htobe64(num_elements);
-  auto begin=io->send_counter;
+  auto begin_o=io->send_counter;
   io->sync();
   io->send_data((uint8_t *)&num_server_elements, sizeof(num_server_elements));
 
@@ -201,11 +211,10 @@ void setup(NetIO *io,std::vector<block> &elements){
   }
 
   auto time4 = std::chrono::high_resolution_clock::now();
-  auto end=io->send_counter-begin;
   std::chrono::duration<double> trans_time = time4 - time0;
-  printf("PSI Setup Time:\n\t%fsec SSINR \n\t Setup Comm: %fMiB sent\n",
-      trans_time.count(), end / 1024.0 / 1024.0
-      );
+
+  printf("[Setup] Time: %f s\n", trans_time.count());
+  printf("[Setup] Sent: %f kiB\n", io->send_counter-begin_o / 1024.0);
 
   free(prf_out); 
   prf_out=NULL; 
@@ -215,24 +224,24 @@ void setup(NetIO *io,std::vector<block> &elements){
 int main(int argc, char* argv[])
 {
   if(argc != 3){
-    puts("usage: {port} {log2(num_inputs)}");
-    return -1;
+    perror("usage: {port} {log2(num_inputs)}");
+    exit(1);
   }
 
   size_t port=atoll(argv[1]);
   if(port==0){
-    puts("Port needs to be a nonzero integer. ");
-    return -1;
+    perror("Port needs to be a nonzero integer. ");
+    exit(1);
   }
   else if(port>=(1<<16)){
-    puts("Port needs to be an integer in the range 1--(1<<16-1)");
-    return -1;
+    perror("Port needs to be an integer in the range 1--(1<<16-1)");
+    exit(1);
   }
 
-  int exp = std::stoi(std::string(argv[2]));
+  size_t exp = atoll(argv[2]);
   if(0 > exp || exp > 32) {
-    std::cout << "log2(num_inputs) should be between 0 and 32" << std::endl;
-    return -1;
+    perror("log2(num_inputs) should be between 0 and 32");
+    exit(1);
   }
 
   NetIO* io = new NetIO(NULL, port);

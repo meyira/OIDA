@@ -87,7 +87,7 @@ void online(std::vector<block> elements, NetIO *io){
 #endif
 
   auto begin = io->send_counter;
-  auto begin_r = io->send_counter;
+  auto begin_r = io->recv_counter;
 
   size_t num_client_elements = htobe64(elements.size());
   io->send_data((uint8_t *)&num_client_elements, sizeof(num_client_elements));
@@ -171,7 +171,6 @@ void online(std::vector<block> elements, NetIO *io){
   printf("[Online] Sent: %f kiB\n", (float)(io->send_counter-begin)/1024.0);
   printf("[Online] Recv: %f kiB\n", (float)(io->recv_counter-begin_r)/1024.0);
 
-
   delete io; 
 }
 
@@ -180,31 +179,23 @@ void online(std::vector<block> elements, NetIO *io){
 int main(int argc, char *argv[])
 {
   if(argc != 4){
-    puts("usage: {ip} {port} {log2(num_inputs)}");
-    return -1;
+    perror("usage: {ip} {port} {log2(num_inputs)}");
+    exit(1);
   }
-
-  const size_t N=128; 
-  init_classgroup();
-
-  unsigned char seed[SEED_BYTES*(N+1)]; 
-  RAND_bytes(seed,SEED_BYTES*(N+1));
 
   char* hostname=argv[1];
   size_t port=atoll(argv[2]);
 
   if(port==0){
-    puts("invalid port");
-    clear_classgroup();
-    return -1;
-
+    perror("invalid port");
+    exit(1);
   }
 
 
   int exp = std::stoi(std::string(argv[3]));
   if(0 > exp || exp > 32) {
-    std::cout << "log2(num_inputs) should be between 0 and 32" << std::endl;
-    return -1;
+    perror("log2(num_inputs) should be between 0 and 32");
+    exit(1);
   }
   PRG prg;
   size_t num_inputs = 1ULL << exp;
@@ -219,8 +210,16 @@ int main(int argc, char *argv[])
 
 
   NetIO* io = new NetIO(hostname, port);
+
+  const size_t N=128; 
+  init_classgroup();
+  unsigned char seed[SEED_BYTES*(N+1)]; 
+  RAND_bytes(seed,SEED_BYTES*(N+1));
+
   setup(io);
   online(elements,io);
+
+  clear_classgroup();
 
   return 0; 
 }
