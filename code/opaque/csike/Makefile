@@ -13,7 +13,7 @@ includes = $(wildcard ../csidh/*.h ../csidh/p512/*.h csidh.h)
 
 all: $(sources) $(includes) 
 	gcc \
-	-Wall -Wextra -fsanitize=address \
+	-Wall -Wextra \
 	-I ../csidh/ \
 	-I ../csidh/p512 \
 	-I ../CSI-FiSh/implementation/XKCP/bin/generic64/ \
