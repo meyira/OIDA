@@ -22,7 +22,7 @@ extern "C"{
 
 using namespace emp;
 const size_t N=128; 
-const size_t ITERATIONS=100; 
+const size_t ITERATIONS=10; 
 bool input[N];
 
 // for offline computation / KAT verification
@@ -42,9 +42,9 @@ void kat(){
     // simulate random input
     if(i%2){
 #ifdef OPT_PRF
-  mpz_add(t,t,mpz_keys[i+1]);
+      mpz_add(t,t,mpz_keys[i+1]);
 #elif
-  action(&pk,&pk, &priv_key[i+1]);
+      action(&pk,&pk, &priv_key[i+1]);
 #endif
     }
   }
@@ -78,6 +78,13 @@ void init(){
     mpz_init(mpz_keys[i]); 
   }
 #ifdef BENCH_KEYGEN
+    FILE *f = fopen("keygen.csv", "a");
+    if(f==NULL) {
+      perror("Error opening file.");
+      exit(1);
+    }
+    fprintf(f, "seconds \n");
+
   for(size_t k=0; k<ITERATIONS; ++k){
     auto time0 = std::chrono::high_resolution_clock::now();
 #endif
@@ -87,10 +94,12 @@ void init(){
       mod_cn_2_vec(mpz_keys[i], priv_key[i].e); 
     }
 #ifdef BENCH_KEYGEN
-    FILE *f = fopen("keygen.csv", "a");
-    if(f==NULL) {
-      perror("Error opening file.");
-      return;
+    {
+      FILE *f = fopen("keygen.csv", "a");
+      if(f==NULL) {
+        perror("Error opening file.");
+        exit(1);
+      }
     }
     auto time1 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> recv = time1 - time0;
@@ -116,18 +125,18 @@ void init(){
 int main(int argc, char* argv[])
 {
   if(argc != 2){
-    puts("usage: port");
-    return -1;
+    perror("usage: port");
+    exit(1);
   }
 
   size_t port=atoll(argv[1]);
   if(port==0){
-    puts("Port needs to be a nonzero integer. ");
-    return -1;
+    perror("Port needs to be a nonzero integer. ");
+    exit(1);
   }
   else if(port>=(1<<16)){
-    puts("Port needs to be an integer in the range 1--(1<<16-1)");
-    return -1;
+    perror("Port needs to be an integer in the range 1--(1<<16-1)");
+    exit(1);
   }
   init();
 
@@ -136,18 +145,30 @@ int main(int argc, char* argv[])
 
   // netio, role, thread, fhe bitlen
   io->sync();
+#ifdef DEBUG
   puts("CSI-FiSh-OPRF-Server: Connected to client");
+#endif
   auto begin = io->send_counter;
   auto time2 = std::chrono::high_resolution_clock::now();
   ot.keygen();
   auto time3 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> recv = time3- time2;
   auto end = io->send_counter-begin;
-  printf("CSI-FiSh-OPRF-Server: keygen Time: %f s\n\t Keygen Comm. : %f kiB\n ", recv.count(), (end /1024.0));
-  begin = io->send_counter;
-
-  auto time4 = std::chrono::high_resolution_clock::now();
+#ifdef DEBUG
+  printf("CSI-FiSh-OPRF-Server: OT Keygen Time: %f s\n\t Keygen Comm. : %f kiB\n ", recv.count(), (end /1024.0));
+#endif
+  FILE *f;
+  f = fopen("server.csv", "a");
+  if(f==NULL) {
+    perror("Error opening file.");
+    exit(1);
+  }
+  // seconds kibibytes
+  fprintf(f, "seconds kibibytes \n");
   for(size_t runs=0; runs<ITERATIONS; ++runs){
+    begin = io->send_counter;
+
+    auto time4 = std::chrono::high_resolution_clock::now();
     /*
      * generate blinding keys
      */
@@ -190,12 +211,18 @@ int main(int argc, char* argv[])
 #ifdef DEBUG
     puts("sent unblinder");
 #endif
-
     auto time5 = std::chrono::high_resolution_clock::now();
     recv = time5- time4;
     end = io->send_counter;
     end= end- begin;
-    printf("CSI-FiSh-OPRF-Server: OPRF Time: %f s\n\t comm. : %f kiB\n ", recv.count(), (end /  1024.0));
+    // time, comms in kiB
+    f = fopen("server.csv", "a");
+    if(f==NULL) {
+      perror("Error opening file.");
+      exit(1);
+    }
+    // seconds kibibytes
+    fprintf(f, "%f %f \n", recv.count(), (end /  1024.0));
   }
 
   delete io;

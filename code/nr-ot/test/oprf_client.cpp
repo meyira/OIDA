@@ -16,37 +16,37 @@ extern "C"{
 
 using namespace emp;
 
-const size_t ITERATIONS=100; 
+const size_t ITERATIONS=10; 
+
 int main(int argc, char *argv[])
 {
   if(argc != 3){
-    puts("usage: IP, port");
-    return -1;
+    perror("usage: IP, port");
+    exit(1);
   }
 
   const size_t N=128; 
-  init_classgroup();
-
-  unsigned char seed[SEED_BYTES*(N+1)]; 
-  RAND_bytes(seed,SEED_BYTES*(N+1));
 
   char* hostname=argv[1];
   size_t port=atoll(argv[2]);
 
   if(port==0){
-    puts("invalid port");
+    perror("invalid port");
     clear_classgroup();
-    return -1;
+    exit(1);
   }
 
   NetIO* io = new NetIO(hostname, port);
   // netio, role, thread, fhe bitlen
   PQOT ot(io, 2, 1, 17);
   io->sync();
+#ifdef DEBUG
   puts("CSI-FiSh-OPRF-Client: Connected to server");
   auto begin = io->send_counter;
   auto time1 = std::chrono::high_resolution_clock::now();
+#endif
   ot.keygen(); 
+#ifdef DEBUG
   auto time2 = std::chrono::high_resolution_clock::now();
   auto end = io->send_counter-begin;
   std::chrono::duration<double> recv = time2 - time1;
@@ -54,11 +54,26 @@ int main(int argc, char *argv[])
       end /  1024.0);
 
   recv.zero();
+#endif
+  {  
+    FILE *f = fopen("client.csv", "a");
+    if(f==NULL) {
+      perror("Error opening file.");
+      exit(1);
+    }
+    fprintf(f, "seconds kibibytes \n");
+  }
+
+  init_classgroup();
+  unsigned char seed[SEED_BYTES*(N+1)]; 
+  RAND_bytes(seed,SEED_BYTES*(N+1));
+
   for(size_t runs=0; runs<ITERATIONS; ++runs){
+    auto begin_e = io->send_counter;
     /*
      * OPRF
      */
-    time1 = std::chrono::high_resolution_clock::now();
+    auto time3 = std::chrono::high_resolution_clock::now();
     bool input[N];
     mpz_t m_0[N];
 
@@ -104,13 +119,17 @@ int main(int argc, char *argv[])
       printf("%" PRIu64 " ", result.A.c[i]);
     puts("");
 #endif
-    time2 = std::chrono::high_resolution_clock::now();
+    auto time4 = std::chrono::high_resolution_clock::now();
 
-    recv =recv+ time2 - time1;
+    std::chrono::duration<double>  recv_e =time4 - time3;
 
-    end = io->send_counter-begin;
-    printf("CSI-FiSh-OPRF-Client: Overall Time: %f s\n\tSent: %f kiB\n ", recv.count(),
-        (end /  1024.0));
+    auto end_e = io->send_counter-begin_e;
+    FILE *f = fopen("client.csv", "a");
+    if(f==NULL) {
+      perror("Error opening file.");
+      exit(1);
+    }
+    fprintf(f, "%f %f \n", recv_e.count(), (end_e /  1024.0));
   }
 
 
