@@ -62,9 +62,8 @@ void setup(){
   cf_->SetTwoIndependentMultiplyShiftParams(params);
   auto time3 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> trans = time3 - time_start;
-  //Log::v("CF", "%s", cf_->Info().c_str());
 
-  Log::v("Setup", "Time: %fs \n\t Sent %d bytes", trans.count(),
+  Log::v("Setup", "Time: %f s \n\t Sent %d bytes", trans.count(),
       ChanRecv->getBytesSent());
 }
 
@@ -95,7 +94,6 @@ void receive(size_t remaining){
       almost_empty.notify_one();
     }
   }
-  puts("BEE");
 }
 
 void initialize(size_t elms){
@@ -130,9 +128,8 @@ void initialize(size_t elms){
 
 void evaluate(std::vector<block> elements){
   size_t done=elements.size(); 
- // size_t done=1; 
   // start by sending all initial elements, not ideal
-  while(DONE!=true){
+  while(done>0){
     std::unique_lock<std::mutex> lm(m);
     full.wait(lm, []{return !client_res.empty();});
     pk_res res=client_res.front();
@@ -170,9 +167,9 @@ void evaluate(std::vector<block> elements){
       if(done==0){
         auto time6 = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> recv = time6 - time4;
-        std::string time = "Time:\n\t  " + std::to_string(recv.count()) + "s";
-        Log::v("PSI", "%s", time.c_str());
-        Log::v("Online", "Sent: %d", ChanRecv->getBytesSent());
+        Log::v("Online", "Time: %fs s", recv.count());
+        Log::v("Online", "Sent: %f kiB", (float)(ChanSend->getBytesSent())/1024.0);
+        Log::v("Online", "Recv: %f kiB", (float)(ChanRecv->getBytesRecv())/1024.0);
         exit(0);
       }
     }
