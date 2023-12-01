@@ -79,7 +79,6 @@ public:
         memset(buffer, 0, NETWORK_BUFFER_SIZE);
         setvbuf(stream, buffer, _IOFBF, NETWORK_BUFFER_SIZE);
         // setvbuf(stream, buffer, _IONBF, NETWORK_BUFFER_SIZE);
-        std::cout << "connected" << std::endl;
     }
 
     ~NetIO(){
