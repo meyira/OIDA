@@ -16,7 +16,6 @@ extern "C"{
 
 //#define DEBUG
 
-
 using namespace emp;
 
 void prf(private_key *priv_key, size_t N){
@@ -75,16 +74,9 @@ int main(int argc, char* argv[])
   fprintf(noopt, "It Bench1 Bench2\n");
   fclose(noopt);
   for(size_t k=0; k<512; k++){
-    FILE *noopt = fopen("prf_csifish.csv", "a");
-    if(noopt==NULL) {
-      perror("Error opening noopt file.");
-      return -1;
-    }
     private_key priv_key[k+1];
-    std::chrono::duration<double> prf_time , opt_time;
-    prf_time=std::chrono::duration<double>::zero();
-    opt_time=std::chrono::duration<double>::zero();
     for(size_t runs=0; runs<100; ++runs){
+      std::chrono::duration<double> prf_time , opt_time;
       unsigned char seed[SEED_BYTES*(k+1)];
       // buffer, number
       RAND_bytes(seed,SEED_BYTES*(k+1));
@@ -101,16 +93,19 @@ int main(int argc, char* argv[])
       auto time2 = std::chrono::high_resolution_clock::now();
       prf_opt(mpz_keys, k);
       auto time3 = std::chrono::high_resolution_clock::now();
-      prf_time += time2- time1;
-      opt_time += time3- time2;
+      prf_time = time2- time1;
+      opt_time = time3- time2;
       for(size_t i=0; i<k+1; ++i){
         mpz_clear(mpz_keys[i]);
       }
+      FILE *noopt = fopen("prf_csifish.csv", "a");
+      if(noopt==NULL) {
+        perror("Error opening noopt file.");
+        return -1;
+      }
+      fprintf(noopt, "%ld %f %f\n", k, prf_time.count(), opt_time.count());
+      fclose(noopt);
     }
-    fprintf(noopt, "%ld %f %f\n", k, prf_time.count()/100, opt_time.count()/100);
-    fclose(noopt);
-    prf_time=std::chrono::duration<double>::zero();
-    opt_time=std::chrono::duration<double>::zero();
 
     printf("finished %ld\n", k);
   }

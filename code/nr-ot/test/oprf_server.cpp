@@ -14,7 +14,7 @@ extern "C"{
 #include <time.h>
 }
 
-#define DEBUG
+//#define DEBUG
 #define PRF
 #define BENCH_KEYGEN
 #define OPT_PRF
@@ -78,8 +78,8 @@ void init(){
     mpz_init(mpz_keys[i]); 
   }
 #ifdef BENCH_KEYGEN
-  auto time0 = std::chrono::high_resolution_clock::now();
   for(size_t k=0; k<ITERATIONS; ++k){
+    auto time0 = std::chrono::high_resolution_clock::now();
 #endif
 
     for(size_t i=0; i<N+1; ++i){
@@ -87,11 +87,15 @@ void init(){
       mod_cn_2_vec(mpz_keys[i], priv_key[i].e); 
     }
 #ifdef BENCH_KEYGEN
+    FILE *f = fopen("keygen.csv", "a");
+    if(f==NULL) {
+      perror("Error opening file.");
+      return;
+    }
+    auto time1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> recv = time1 - time0;
+    fprintf(f,"%f\n", recv.count());
   }
-  auto time1 = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> recv = time1 - time0;
-  printf("CSI-FiSh-OPRF-Server: Keygen Time: %f s\n", recv.count()/(double)ITERATIONS
-      );
 #endif
 
   /*
@@ -186,13 +190,13 @@ int main(int argc, char* argv[])
 #ifdef DEBUG
     puts("sent unblinder");
 #endif
-  }
 
-  auto time5 = std::chrono::high_resolution_clock::now();
-  recv = time5- time4;
-  end = io->send_counter;
-  end= end- begin;
-  printf("CSI-FiSh-OPRF-Server: average OPRF Time: %f s\n\t Average comm. : %f kiB\n ", recv.count()/(double)ITERATIONS, (end /  1024.0)/(double)ITERATIONS);
+    auto time5 = std::chrono::high_resolution_clock::now();
+    recv = time5- time4;
+    end = io->send_counter;
+    end= end- begin;
+    printf("CSI-FiSh-OPRF-Server: OPRF Time: %f s\n\t comm. : %f kiB\n ", recv.count(), (end /  1024.0));
+  }
 
   delete io;
   return 0; 
