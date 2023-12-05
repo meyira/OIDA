@@ -16,15 +16,12 @@ int main()
   const size_t HASHLEN=256; 
   bool msg[HASHLEN];
   private_key server_keys[HASHLEN+1];
-  float runs=100;
   uint8_t idx[256];
   bool free[HASHLEN];
 
   for(size_t update=1; update<256; ++update){
-    clock_t recompute_t=0;
-    clock_t update_t=0;
     printf("STARTING ROUND %ld \n\n", update);
-    for(size_t s=0; s<runs; ++s){
+    for(size_t s=0; s<100; ++s){
       /*
        * sample fresh keys
        */
@@ -60,7 +57,7 @@ int main()
         uint8_t r=(uint8_t) rand();
         while(!free[r])
           // stupid rejection sampling
-         r=(uint8_t) rand();
+          r=(uint8_t) rand();
         idx[i]=r;
         free[r]=0;
       }
@@ -68,7 +65,7 @@ int main()
       /*
        * updates
        */
-      t0 = clock();
+      clock_t t2 = clock();
       public_key opt; 
       {
         large_private_key updater={0};
@@ -81,8 +78,7 @@ int main()
         }
         large_csidh(&opt, &server_result, &updater);
       }
-      t1 = clock();
-      update_t+=t1-t0; 
+      clock_t t3 = clock();
 
       /*
        * recompute
@@ -103,24 +99,22 @@ int main()
         large_csidh(&recomp, &base, &aggregated2);
       }
       t1 = clock();
-      recompute_t+=(t1-t0); 
 
       //// verif, annoying when doing benchmarking
-        //if (memcmp(&opt, &recomp, sizeof(public_key))){
-        //  printf("\x1b[31mNOT EQUAL!\x1b[0m\n");
-        //}
-        //else
-        //  printf("\x1b[32mequal.\x1b[0m\n");
-    FILE *noopt = fopen("updateable.csv", "a");
-    if(noopt==NULL) {
-      perror("Error opening updatable file.");
-      return -1;
-    }
-    fprintf(noopt, "%ld;%f;%f\n", update, recompute_t, update_t);
-    fclose(noopt);
+      //if (memcmp(&opt, &recomp, sizeof(public_key))){
+      //  printf("\x1b[31mNOT EQUAL!\x1b[0m\n");
+      //}
+      //else
+      //  printf("\x1b[32mequal.\x1b[0m\n");
+      FILE *noopt = fopen("updateable.csv", "a");
+      if(noopt==NULL) {
+        perror("Error opening updatable file.");
+        return -1;
+      }
+      fprintf(noopt, "%ld;%f;%f\n", update, ((double)(t1-t0))/CLOCKS_PER_SEC, ((double)t3-t2)/CLOCKS_PER_SEC);
+      fclose(noopt);
     }
 
   }
   return 0; 
 }
-
