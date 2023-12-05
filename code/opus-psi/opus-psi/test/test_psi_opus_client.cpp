@@ -127,6 +127,7 @@ void initialize(size_t elms){
 
 void evaluate(std::vector<block> elements){
   size_t done=elements.size(); 
+        auto time4 = std::chrono::high_resolution_clock::now();
   // start by sending all initial elements, not ideal
   while(done>0){
     std::unique_lock<std::mutex> lm(m);
