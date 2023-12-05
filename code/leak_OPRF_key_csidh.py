@@ -2,6 +2,7 @@
 from random import randrange
 import numpy as np
 from time import sleep
+from statistics import median
 MAX_EXPONENT=5
 NUM_PRIMES=74
 def gen_key():
@@ -19,10 +20,10 @@ def blind_key(private_key, random):
     return blinded
 
 if __name__=="__main__": 
-  found=0
+  found=[]
   found_min=10000
   found_max=0
-  for _ in range(1): 
+  for _ in range(1000): 
     # average over 100 runs
     private_key=gen_key()
     guessed_key=[0]*NUM_PRIMES
@@ -30,7 +31,6 @@ if __name__=="__main__":
     intermediate_keys=[]
     # try 1000 times, usually succeeds after ~50
     for i in range(1000): 
-      sleep(0.7)
       # random blinding key
       random=gen_key()
       # blind
@@ -52,15 +52,7 @@ if __name__=="__main__":
             guessed_key[j]=np.amax(nparr[:,j])-5
             known[j]=1
       if private_key==guessed_key: 
-        if i < found_min: 
-            found_min=i
-        if i > found_max: 
-            found_max=i
-        found+=i
+        found.append(i)
         break
-  print("found full key at iteration "+ str(found))
 
-
-
-
-
+  print("found full key at iteration "+ str(median(found)) +" median")
