@@ -107,7 +107,7 @@ update-prf: ${includes} ${sources} update-prf.c
 		-DNDEBUG \
 		$(sources) \
 		update-prf.c \
-		-o ${OUT_DIR}/oprf-opt
+		-o ${OUT_DIR}/update-prf
 clean:
 	@rm -f ${OUT_DIR}/*
 
