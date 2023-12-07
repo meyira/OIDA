@@ -27,6 +27,9 @@ def bench(server, dir_name, username, password, IP, Port, timeout, nroprf=False,
             "register"], stdout=client_output)
         while p.poll() is None:
                         continue
+def bench2(server, dir_name, username, password, IP, Port, timeout, nroprf=False, pq=False):
+    client = "opaque-client-nroprf" if nroprf else "opaque-client"
+    with open("bench/"+str(client), "a")  as client_output:
         p=subprocess.Popen([dir_name + client, IP, Port, username, password,
             "authentication"], stdout=client_output)
         while p.poll() is None:
@@ -45,7 +48,8 @@ def main():
 
     server = "opaque-server-nroprf" if nroprf else "opaque-server"
     with open("bench/"+str(server), "a")  as server_output:
-        pq_p_server = subprocess.Popen(["pq-opaque/" +server, str(int(Port) + 1)], stdout=subprocess.PIPE)
+        pq_p_server = subprocess.Popen(["pq-opaque/" +server, str(int(Port) +
+            1)], stdout=server_output)
 
     for _ in range(num_iterations):
         username = "".join(random.choice(string.ascii_lowercase) for _ in range(random.randint(1, 20))) 
@@ -53,6 +57,7 @@ def main():
 
         print("Bench pq-opaque it: {}".format(_))
         ret = bench(pq_p_server, "pq-opaque/", username, password, IP, str(int(Port) + 1), 60, nroprf=nroprf, pq=True)
+        ret = bench2(pq_p_server, "pq-opaque/", username, password, IP, str(int(Port) + 1), 60, nroprf=nroprf, pq=True)
     pq_p_server.kill()
 
 if __name__ == "__main__":
