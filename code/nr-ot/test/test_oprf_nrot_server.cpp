@@ -100,7 +100,7 @@ void init(){
     }
 #ifdef BENCH_KEYGEN
     {
-      FILE *f = fopen("keygen.csv", "a");
+      FILE *f = fopen("keygen_128.csv", "a");
       if(f==NULL) {
         perror("Error opening file.");
         exit(1);
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
   printf("CSI-FiSh-OPRF-Server: OT Keygen Time: %f s\n\t Keygen Comm. : %f kiB\n ", recv.count(), (end /1024.0));
 #endif
   FILE *f;
-  f = fopen("server.csv", "a");
+  f = fopen("server_128.csv", "a");
   if(f==NULL) {
     perror("Error opening file.");
     exit(1);
