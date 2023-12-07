@@ -83,7 +83,7 @@ void init(){
     mpz_init(mpz_keys[i]); 
   }
 #ifdef BENCH_KEYGEN
-  FILE *f = fopen("keygen.csv", "a");
+  FILE *f = fopen("keygen_128.csv", "a");
   if(f==NULL) {
     perror("Error opening file.");
     exit(1);
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
     end = io->send_counter;
     end= end- begin;
     // time, comms in kiB
-    f = fopen("server.csv", "a");
+    f = fopen("server_128.csv", "a");
     if(f==NULL) {
       perror("Error opening file.");
       exit(1);

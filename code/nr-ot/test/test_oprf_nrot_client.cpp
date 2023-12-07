@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     std::chrono::duration<double>  recv_e =time4 - time3;
 
     auto end_e = io->send_counter-begin_e;
-    FILE *f = fopen("client.csv", "a");
+    FILE *f = fopen("client_128.csv", "a");
     if(f==NULL) {
       perror("Error opening file.");
       exit(1);
