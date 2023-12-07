@@ -4,7 +4,7 @@
 //#define MERKLEIZE_PK
 
 #include <openssl/sha.h>
-#include "XKCP/bin/generic32lc/libkeccak.a.headers/SimpleFIPS202.h"
+#include "XKCP/bin/generic64/libkeccak.a.headers/SimpleFIPS202.h"
 
 //#define PK_TREE_DEPTH 18
 //#define ROUNDS 6
