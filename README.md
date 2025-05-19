@@ -1,6 +1,6 @@
 # OPRFs from Isogenies: Designs and Analysis
 
-Auxilary files and code for the paper _OPRFs from Isogenies: Designs and Analysis_, by 
+Auxilary files and code for the paper [OPRFs from Isogenies: Designs and Analysis](ia.cr/2023/639), by 
 Lena Heimberger, Tobias Hennerbichler, Fredrik Meisingseth, Sebastian Ramacher and Christian Rechberger. 
 
 *NOTE:* This is academic research code and not production-ready. The implementation is not constant-time and may have other errors. 
